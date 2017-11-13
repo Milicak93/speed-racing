@@ -1,8 +1,11 @@
 #include <stdlib.h>
 #include <math.h>
+#include <stdbool.h>
 
 #ifdef __APPLE__
+
 #include <GLUT/glut.h>
+
 #else
 #include <GL/glut.h>
 #endif
@@ -10,12 +13,21 @@
 /* Dimenzije prozora */
 static int window_width, window_height;
 
+static bool key_up = false;
+static bool key_down = false;
+static bool key_left = false;
+static bool key_right = false;
+
 static float pom = 0;
 static float down = 0;
 static float angle = 0;
 
 /* Deklaracije callback funkcija. */
 static void on_keyboard(int key, int x, int y);
+
+static void on_keyboard_up(int key, int x, int y);
+
+static void on_update(int val);
 
 static void on_reshape(int width, int height);
 
@@ -34,6 +46,7 @@ int main(int argc, char **argv) {
     /* Registruju se callback funkcije. */
     glutKeyboardFunc(on_keyboard);
     glutSpecialFunc(on_keyboard);
+    glutSpecialUpFunc(on_keyboard_up);
     glutReshapeFunc(on_reshape);
     glutDisplayFunc(on_display);
 
@@ -43,6 +56,7 @@ int main(int argc, char **argv) {
     glLineWidth(2);
 
     /* Program ulazi u glavnu petlju. */
+    glutTimerFunc(0, on_update, 0);
     glutMainLoop();
 
     return 0;
@@ -51,24 +65,56 @@ int main(int argc, char **argv) {
 static void on_keyboard(int key, int x, int y) {
     switch (key) {
         case GLUT_KEY_LEFT:
-            angle += 10;
+            key_left = true;
             break;
         case GLUT_KEY_RIGHT:
-            angle -= 10;
+            key_right = true;
             break;
         case GLUT_KEY_DOWN:
-            pom += sinf(angle * (float) M_PI / 180.0f) * 0.1;
-            down += cosf(angle * (float) M_PI / 180.0f) * 0.1;
+            key_down = true;
             break;
         case GLUT_KEY_UP:
-            pom -= sinf(angle * (float) M_PI / 180.0f) * 0.1;
-            down -= cosf(angle * (float) M_PI / 180.0f) * 0.1;
+            key_up = true;
             break;
         case 27:
             exit(1);
             break;
     }
 
+}
+
+static void on_keyboard_up(int key, int x, int y) {
+    switch (key) {
+        case GLUT_KEY_LEFT:
+            key_left = false;
+            break;
+        case GLUT_KEY_RIGHT:
+            key_right = false;
+            break;
+        case GLUT_KEY_DOWN:
+            key_down = false;
+            break;
+        case GLUT_KEY_UP:
+            key_up = false;
+            break;
+    }
+}
+
+/* funkcija osvezavanja igrice (pomeranje objekata - logika igrice) */
+static void on_update(int val) {
+    if (key_up) {
+        pom += sinf(angle * (float) M_PI / 180.0f) * 0.1;
+        down += cosf(angle * (float) M_PI / 180.0f) * 0.1;
+    } else if (key_down) {
+        pom -= sinf(angle * (float) M_PI / 180.0f) * 0.1;
+        down -= cosf(angle * (float) M_PI / 180.0f) * 0.1;
+    }
+    if (key_right) {
+        angle -= 10;
+    } else if (key_left) {
+        angle += 10;
+    }
+    glutTimerFunc(16, on_update, 0);
     glutPostRedisplay();
 }
 
