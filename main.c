@@ -18,9 +18,12 @@ static bool key_down = false;
 static bool key_left = false;
 static bool key_right = false;
 
-static float pom = 0;
-static float down = 0;
+static float posX = 0;
+static float posZ = 0;
 static float angle = 0;
+
+static float vX = 0;
+static float vZ = 0;
 
 /* Deklaracije callback funkcija. */
 static void on_keyboard(int key, int x, int y);
@@ -100,20 +103,76 @@ static void on_keyboard_up(int key, int x, int y) {
     }
 }
 
-/* funkcija osvezavanja igrice (pomeranje objekata - logika igrice) */
+/* funkcija osvezavanja cele igrice (pomeranje objekata - logika igrice) */
 static void on_update(int val) {
+    /*
+     * Logika fizike automobila, radjeno po uzoru na:
+     * https://gamedev.stackexchange.com/questions/26845/i-am-looking-to-create-realistic-car-movement-using-vectors
+     */
+
+    // promenljive ubrzanja automobila - vektor (x,z)
+    float accelerationX = 0.0f, accelerationZ = 0.0f;
+
+    // konstante fizike
+    float accelerationConstant = 0.05f; // konstanta ubrzanja automobila
+    float forwardFrictionContstant = 0.1f; // koeficijent otpora u pravcu ka kome je auto okrenut
+    float sideFrictionConstant = 0.6f; // koeficijent otpora po strani automobila
+    float maxSpeed = 3.0f; // maksimalna brzina automobila
+    float turnSpeed = 30.0f; // brzina skretanja automobila
+
     if (key_up) {
-        pom += sinf(angle * (float) M_PI / 180.0f) * 0.1;
-        down += cosf(angle * (float) M_PI / 180.0f) * 0.1;
+        // ukoliko igrac drzi strelicu napred, pravimo ubrzanje u pravcu nosa automobila
+        accelerationX = sinf(angle * (float) M_PI / 180.0f) * accelerationConstant;
+        accelerationZ = cosf(angle * (float) M_PI / 180.0f) * accelerationConstant;
     } else if (key_down) {
-        pom -= sinf(angle * (float) M_PI / 180.0f) * 0.1;
-        down -= cosf(angle * (float) M_PI / 180.0f) * 0.1;
+        // ukoliko igrac drzi strelicu nazad, pravimo ubrzanje u suprotnom pravcu od nosa automobila
+        accelerationX = sinf(angle * (float) M_PI / 180.0f) * accelerationConstant;
+        accelerationZ = cosf(angle * (float) M_PI / 180.0f) * accelerationConstant;
     }
+
+    // trenutna vrednost brzine (skalarna)
+    float speed = sqrtf(vX * vX + vZ * vZ);
+
+    // ukoliko igrac drzi strelicu na desno ili levo, skrecemo ugao automobila u tom pravcu
+    // kao modifikaciju brzini skretanja koristimo linearnu formulu speed / maxSpeed
+    // ona ce efektivno biti 0 kada automobil stoji, dok ce biti maksimalna (1) pri maksimalnoj brzini
+    // time postizemo da automobil ima brze skretanje sto se brze krece i takodje da ne moze skretati u mestu
     if (key_right) {
-        angle -= 10;
+        angle -= turnSpeed * speed / maxSpeed;
     } else if (key_left) {
-        angle += 10;
+        angle += turnSpeed * speed / maxSpeed;
     }
+
+    // racunamo otpor u pravcu kretanja ovom jednostavnom formulom
+    // prosto uzimamo brzinu auta pomnozenu sa konstantom i oduzimamo je
+    float forwardFrictionX = -vX * forwardFrictionContstant;
+    float forwardFrictionZ = -vZ * forwardFrictionContstant;
+
+    // racunamo otpor na stranu automobila
+    // prvo racunamo vektor desne strane automobila, ako je automobil okrenut u pravcu angle
+    // onda je desna strana na angle + 90
+    float rightX = sinf((angle + 90.0f) * (float) M_PI / 180.0f);
+    float rightZ = cosf((angle + 90.0f) * (float) M_PI / 180.0f);
+
+    // kada imamo vektor desne strane automobila (rightX, rightZ), skalarni proizvod strane i trenutne brzine ce nam dati
+    // vrednost brzine kretanja u stranu, to cemo pomnoziti sa samim vektorom strane i konstantom otpora za stranu
+    float sideFrictionX = -rightX * (vX * rightX + vZ * rightZ) * sideFrictionConstant;
+    float sideFrictionZ = -rightZ * (vX * rightX + vZ * rightZ) * sideFrictionConstant;
+
+    // na trenutnu brzinu primenjujemo otpor koji smo prethodno izracunali
+    vX += forwardFrictionX + sideFrictionX;
+    vZ += forwardFrictionZ + sideFrictionZ;
+
+    // ako se automobil ne krece maksimalnom brzinom, ubrzavamo ga trenutnim ubrzanjem
+    if (speed < maxSpeed) {
+        vX += accelerationX;
+        vZ += accelerationZ;
+    }
+
+    // pomeramo poziciju automobila za njegovu trenutnu brzinu
+    posX += vX;
+    posZ += vZ;
+
     glutTimerFunc(16, on_update, 0);
     glutPostRedisplay();
 }
@@ -143,7 +202,7 @@ static void on_display(void) {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     gluLookAt(
-            0, 5, -0.1,
+            0, 50, -0.1,
             0, 0, 0,
             0, 1, 0
     );
@@ -153,9 +212,9 @@ static void on_display(void) {
      * istu.
      */
     glColor3f(0, 0, 1);
-    glTranslatef(pom, .5, down);
+    glTranslatef(posX, .5, posZ);
     glRotatef(angle, 0, 1, 0);
-    glScalef(1, 1, 1);
+    glScalef(2, 1, 3);
     glutSolidCube(1);
 
     /* Nova slika se salje na ekran. */
