@@ -1,7 +1,3 @@
-#include <stdlib.h>
-#include <math.h>
-#include <stdbool.h>
-
 #ifdef __APPLE__
 
 #include <GLUT/glut.h>
@@ -9,6 +5,13 @@
 #else
 #include <GL/glut.h>
 #endif
+
+#include <stdlib.h>
+#include <math.h>
+#include <stdbool.h>
+#include <memory.h>
+#include <stdio.h>
+
 
 /* Dimenzije prozora */
 static int window_width, window_height;
@@ -25,6 +28,7 @@ static float angle = 0;
 static float vX = 0;
 static float vZ = 0;
 
+
 /* Deklaracije callback funkcija. */
 static void on_keyboard(int key, int x, int y);
 
@@ -35,6 +39,8 @@ static void on_update(int val);
 static void on_reshape(int width, int height);
 
 static void on_display(void);
+
+static void write_text(float x, float y, const char *s);
 
 int main(int argc, char **argv) {
     /* Inicijalizuje se GLUT. */
@@ -114,8 +120,8 @@ static void on_update(int val) {
     float accelerationX = 0.0f, accelerationZ = 0.0f;
 
     // konstante fizike
-    float accelerationConstant = 0.05f; // konstanta ubrzanja automobila
-    float forwardFrictionContstant = 0.1f; // koeficijent otpora u pravcu ka kome je auto okrenut
+    float accelerationConstant = 0.04f; // konstanta ubrzanja automobila
+    float forwardFrictionContstant = accelerationConstant / 3; // koeficijent otpora u pravcu ka kome je auto okrenut
     float sideFrictionConstant = 0.6f; // koeficijent otpora po strani automobila
     float maxSpeed = 3.0f; // maksimalna brzina automobila
     float turnSpeed = 30.0f; // brzina skretanja automobila
@@ -183,6 +189,23 @@ static void on_reshape(int width, int height) {
     window_height = height;
 }
 
+static void write_text(float x, float y, const char *s) {
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    glRasterPos2f(x, y);
+
+    int i = 0;
+    for (i = 0; i < strlen(s); i++) {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, s[i]);
+
+    }
+}
+
 static void on_display(void) {
     /* Brise se prethodni sadrzaj prozora. */
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -216,6 +239,16 @@ static void on_display(void) {
     glRotatef(angle, 0, 1, 0);
     glScalef(2, 1, 3);
     glutSolidCube(1);
+
+    //racuna se trenutna brzina: sqrt(vX^2 + vZ^2)
+
+    int speed = (int) (sqrtf(vX * vX + vZ * vZ) * 50);
+
+    char buff[200];
+    sprintf(buff, "Speed: %d ", speed);
+
+    write_text(0, 0.9, buff);
+
 
     /* Nova slika se salje na ekran. */
     glutSwapBuffers();
