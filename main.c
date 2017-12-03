@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include <memory.h>
 #include <stdio.h>
+#include "texture.h"
 #include "model.h"
 
 
@@ -30,6 +31,8 @@ static float vX = 0;
 static float vZ = 0;
 
 static MODEL model;
+
+static GLuint car_texture;
 
 
 /* Deklaracije callback funkcija. */
@@ -68,6 +71,7 @@ int main(int argc, char **argv) {
     glLineWidth(2);
 
     load_model("car.obj", &model);
+    car_texture = loadBMP_custom("car.bmp");
 
     /* Program ulazi u glavnu petlju. */
     glutTimerFunc(0, on_update, 0);
@@ -245,7 +249,7 @@ static void setup_car_material() {
     GLfloat ambient_coeffs[] = {0.2, 0.2, 0.2, 1};
 
     /* Koeficijenti difuzne refleksije materijala. */
-    GLfloat diffuse_coeffs[] = {0.0, 0.0, 0.8, 1};
+    GLfloat diffuse_coeffs[] = {0.8, 0.8, 0.8, 1};
 
     /* Koeficijenti spekularne refleksije materijala. */
     GLfloat specular_coeffs[] = {1, 1, 1, 1};
@@ -299,15 +303,18 @@ static void on_display(void) {
     setup_car_material();
 
     glShadeModel(GL_SMOOTH);
+    glEnable(GL_TEXTURE_2D);
 
     glBegin(GL_TRIANGLES);
-    glColor3f(0, 0, 1);
     for (int i = 0; i < model.tacaka; ++i) {
+        glTexCoord2f(model.tekstura[i].x, model.tekstura[i].y);
         glNormal3f(model.normale[i].x, model.normale[i].y, model.normale[i].z);
         glVertex3f(model.pozicije[i].x, model.pozicije[i].y, model.pozicije[i].z);
     }
     glEnd();
-
+    glDisable(GL_LIGHTING);
+    glDisable(GL_TEXTURE_2D);
+    
     //racuna se trenutna brzina: sqrt(vX^2 + vZ^2)
 
     int speed = (int) (sqrtf(vX * vX + vZ * vZ) * 50);
@@ -315,6 +322,7 @@ static void on_display(void) {
     char buff[200];
     sprintf(buff, "Speed: %d km/h", speed);
 
+    glColor3f(0, 0, 0);
     write_text(0, 0.9, buff);
 
 
