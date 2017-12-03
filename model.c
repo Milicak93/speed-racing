@@ -2,10 +2,17 @@
 // Created by Milica Kostic on 12/3/17.
 //
 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "model.h"
 
+
+/*
+ * informacije kako ucitati .obj fajl su nadjene na linku
+ * http://www.opengl-tutorial.org/beginners-tutorials/tutorial-7-model-loading/
+ * Po uzoru na to kakav je format fajla sam napisala funkcuju load_model za ucitavanje modela
+ */
 void load_model(const char *file_name, MODEL *output) {
 
     FILE *file = fopen(file_name, "r");
