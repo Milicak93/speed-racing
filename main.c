@@ -246,6 +246,7 @@ static void on_display(void) {
     glBegin(GL_TRIANGLES);
     glColor3f(0, 0, 1);
     for (int i = 0; i < model.tacaka; ++i) {
+        glNormal3f(model.normale[i].x, model.normale[i].y, model.normale[i].z);
         glVertex3f(model.pozicije[i].x, model.pozicije[i].y, model.pozicije[i].z);
     }
     glEnd();

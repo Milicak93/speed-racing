@@ -15,6 +15,8 @@ typedef struct {
 
 typedef struct {
     VEKTOR3* pozicije;
+    VEKTOR3* normale;
+    KORD_TEKSTURE* tekstura;
     int tacaka;
 } MODEL;
 
