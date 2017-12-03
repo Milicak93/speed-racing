@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include <memory.h>
 #include <stdio.h>
+#include "model.h"
 
 
 /* Dimenzije prozora */
@@ -27,6 +28,8 @@ static float angle = 0;
 
 static float vX = 0;
 static float vZ = 0;
+
+static MODEL model;
 
 
 /* Deklaracije callback funkcija. */
@@ -63,6 +66,8 @@ int main(int argc, char **argv) {
     glClearColor(0.75, 0.75, 0.75, 0);
     glEnable(GL_DEPTH_TEST);
     glLineWidth(2);
+
+    load_model("car.obj", &model);
 
     /* Program ulazi u glavnu petlju. */
     glutTimerFunc(0, on_update, 0);
@@ -225,7 +230,7 @@ static void on_display(void) {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     gluLookAt(
-            0, 50, -0.1,
+            0, 10, -0.1,
             0, 0, 0,
             0, 1, 0
     );
@@ -234,11 +239,16 @@ static void on_display(void) {
      * Kreira se kocka i primenjuje se geometrijska transformacija na
      * istu.
      */
-    glColor3f(0, 0, 1);
     glTranslatef(posX, .5, posZ);
-    glRotatef(angle, 0, 1, 0);
-    glScalef(2, 1, 3);
-    glutSolidCube(1);
+    glRotatef(angle + 180, 0, 1, 0);
+    glScalef(1, 1, 1);
+
+    glBegin(GL_TRIANGLES);
+    glColor3f(0, 0, 1);
+    for (int i = 0; i < model.tacaka; ++i) {
+        glVertex3f(model.pozicije[i].x, model.pozicije[i].y, model.pozicije[i].z);
+    }
+    glEnd();
 
     //racuna se trenutna brzina: sqrt(vX^2 + vZ^2)
 
