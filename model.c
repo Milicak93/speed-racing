@@ -25,6 +25,8 @@ void load_model(const char *file_name, MODEL *output) {
     output->tekstura = (KORD_TEKSTURE *) malloc(70000 * sizeof(KORD_TEKSTURE));
     output->normale = (VEKTOR3 *) malloc(70000 * sizeof(VEKTOR3));
     output->tacaka = 0;
+    output->pocetak_obj = (int *) malloc(50 * sizeof(int));
+    output->br_obj = 0;
 
     char buff[256];
     while (fgets(buff, 256, file) != NULL) {
@@ -61,6 +63,10 @@ void load_model(const char *file_name, MODEL *output) {
             output->tekstura[output->tacaka] = t2[t_i3 - 1];
             output->normale[output->tacaka] = n3[n_i3 - 1];
             output->tacaka++;
+        }
+
+        if (buff[0] == 'o' && buff[1] == ' ') {
+            output->pocetak_obj[output->br_obj++] = output->tacaka;
         }
 
     }

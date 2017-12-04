@@ -33,6 +33,7 @@ static float vZ = 0;
 static MODEL model;
 
 static GLuint car_texture;
+static GLuint wheel_texture;
 
 
 /* Deklaracije callback funkcija. */
@@ -72,6 +73,7 @@ int main(int argc, char **argv) {
 
     load_model("car.obj", &model);
     car_texture = loadBMP_custom("car.bmp");
+    wheel_texture = loadBMP_custom("wheels.bmp");
 
     /* Program ulazi u glavnu petlju. */
     glutTimerFunc(0, on_update, 0);
@@ -262,7 +264,27 @@ static void setup_car_material() {
     glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_coeffs);
     glMaterialfv(GL_FRONT, GL_SPECULAR, specular_coeffs);
     glMaterialf(GL_FRONT, GL_SHININESS, shininess);
+}
 
+static void setup_glass_material() {
+
+    /* Koeficijenti ambijentalne refleksije materijala. */
+    GLfloat ambient_coeffs[] = {0.2, 0.2, 0.2, 0.2};
+
+    /* Koeficijenti difuzne refleksije materijala. */
+    GLfloat diffuse_coeffs[] = {0.8, 0.8, 0.8, 0.4};
+
+    /* Koeficijenti spekularne refleksije materijala. */
+    GLfloat specular_coeffs[] = {1, 1, 1, 1};
+
+    /* Koeficijent glatkosti materijala. */
+    GLfloat shininess = 20;
+
+    /* Podesavaju se parametri materijala. */
+    glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_coeffs);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_coeffs);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, specular_coeffs);
+    glMaterialf(GL_FRONT, GL_SHININESS, shininess);
 }
 
 static void on_display(void) {
@@ -305,16 +327,78 @@ static void on_display(void) {
     glShadeModel(GL_SMOOTH);
     glEnable(GL_TEXTURE_2D);
 
+    glBindTexture(GL_TEXTURE_2D, car_texture);
+
     glBegin(GL_TRIANGLES);
     for (int i = 0; i < model.tacaka; ++i) {
+        // prednji tockovi
+        if ((i >= model.pocetak_obj[16] && i < model.pocetak_obj[17])
+                || (i >= model.pocetak_obj[8] && i < model.pocetak_obj[9])) {
+            continue;
+        }
+
+        // zadnji tockovi
+        if ((i >= model.pocetak_obj[9] && i < model.pocetak_obj[10])
+                || (i >= model.pocetak_obj[11] && i < model.pocetak_obj[12])) {
+            continue;
+        }
+
+        // stakla
+        if (i < model.pocetak_obj[1]) {
+            continue;
+        }
+
         glTexCoord2f(model.tekstura[i].x, model.tekstura[i].y);
         glNormal3f(model.normale[i].x, model.normale[i].y, model.normale[i].z);
         glVertex3f(model.pozicije[i].x, model.pozicije[i].y, model.pozicije[i].z);
     }
     glEnd();
-    glDisable(GL_LIGHTING);
+
+    glBindTexture(GL_TEXTURE_2D, wheel_texture);
+
+    glBegin(GL_TRIANGLES);
+    for (int i = 0; i < model.tacaka; ++i) {
+        // prednji tockovi
+        if ((i >= model.pocetak_obj[16] && i < model.pocetak_obj[17])
+            || (i >= model.pocetak_obj[8] && i < model.pocetak_obj[9])) {
+            glTexCoord2f(model.tekstura[i].x, model.tekstura[i].y);
+            glNormal3f(model.normale[i].x, model.normale[i].y, model.normale[i].z);
+            glVertex3f(model.pozicije[i].x, model.pozicije[i].y, model.pozicije[i].z);
+        }
+
+        // zadnji tockovi
+        if ((i >= model.pocetak_obj[9] && i < model.pocetak_obj[10])
+            || (i >= model.pocetak_obj[11] && i < model.pocetak_obj[12])) {
+            glTexCoord2f(model.tekstura[i].x, model.tekstura[i].y);
+            glNormal3f(model.normale[i].x, model.normale[i].y, model.normale[i].z);
+            glVertex3f(model.pozicije[i].x, model.pozicije[i].y, model.pozicije[i].z);
+        }
+    }
+    glEnd();
+
+    /*
+     * ukljucivanje transparencije stakla, primer za transparentnost:
+     * https://stackoverflow.com/questions/3125017/how-to-draw-transparent-polygon-in-opengl
+     */
+    glEnable(GL_BLEND); //Enable blending.
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //Set blending function.
+
     glDisable(GL_TEXTURE_2D);
-    
+
+    setup_glass_material();
+
+    glBegin(GL_TRIANGLES);
+    glColor4f(1, 1, 1, 1);
+    for (int i = 0; i < model.pocetak_obj[1]; ++i) {
+        glNormal3f(model.normale[i].x, model.normale[i].y, model.normale[i].z);
+        glVertex3f(model.pozicije[i].x, model.pozicije[i].y, model.pozicije[i].z);
+    }
+
+    glEn
+
+    glDisable(GL_BLEND);
+    glDisable(GL_LIGHTING);
+
     //racuna se trenutna brzina: sqrt(vX^2 + vZ^2)
 
     int speed = (int) (sqrtf(vX * vX + vZ * vZ) * 50);

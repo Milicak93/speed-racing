@@ -8,6 +8,7 @@ find_package (GLUT REQUIRED)
 
 configure_file(car.obj car.obj COPYONLY)
 configure_file(car.bmp car.bmp COPYONLY)
+configure_file(wheels.bmp wheels.bmp COPYONLY)
 
 set(SOURCE_FILES main.c model.c model.h texture.c texture.h)
 add_executable(SpeedRacing ${SOURCE_FILES})

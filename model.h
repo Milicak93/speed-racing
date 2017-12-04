@@ -14,13 +14,15 @@ typedef struct {
 } KORD_TEKSTURE;
 
 typedef struct {
-    VEKTOR3* pozicije;
-    VEKTOR3* normale;
-    KORD_TEKSTURE* tekstura;
+    VEKTOR3 *pozicije;
+    VEKTOR3 *normale;
+    KORD_TEKSTURE *tekstura;
     int tacaka;
+    int *pocetak_obj;
+    int br_obj;
 } MODEL;
 
-void load_model(const char *file_name, MODEL* output);
+void load_model(const char *file_name, MODEL *output);
 
 #endif //SPEEDRACING_MODEL_H
 
