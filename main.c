@@ -168,10 +168,10 @@ static void on_update(int val) {
     }
 
     //maksimalna okrenutost tockova
-    if (rotY > 60) {
-        rotY = 60;
-    } else if (rotY < -60) {
-        rotY = -60;
+    if (rotY > 45) {
+        rotY = 45;
+    } else if (rotY < -45) {
+        rotY = -45;
     }
 
     // racunamo otpor u pravcu kretanja ovom jednostavnom formulom
@@ -205,7 +205,7 @@ static void on_update(int val) {
     posZ += vZ;
 
     //rotacija tockova
-    rotX += speed * 10;
+    rotX += speed * 100;
 
     glutTimerFunc(16, on_update, 0);
     glutPostRedisplay();
