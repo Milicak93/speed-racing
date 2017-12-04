@@ -394,7 +394,7 @@ static void on_display(void) {
         glVertex3f(model.pozicije[i].x, model.pozicije[i].y, model.pozicije[i].z);
     }
 
-    glEn
+    glEnd();
 
     glDisable(GL_BLEND);
     glDisable(GL_LIGHTING);
