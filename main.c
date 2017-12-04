@@ -35,6 +35,9 @@ static MODEL model;
 static GLuint car_texture;
 static GLuint wheel_texture;
 
+static float rotX = 0;
+static float rotY = 0;
+
 
 /* Deklaracije callback funkcija. */
 static void on_keyboard(int key, int x, int y);
@@ -156,8 +159,19 @@ static void on_update(int val) {
     // time postizemo da automobil ima brze skretanje sto se brze krece i takodje da ne moze skretati u mestu
     if (key_right) {
         angle -= turnSpeed * speed / maxSpeed;
+        rotY -= 3; //okretanje tockova
     } else if (key_left) {
         angle += turnSpeed * speed / maxSpeed;
+        rotY += 3;
+    } else {
+        rotY *= 0.8; //vracanje tockova ka napred nakon skretanja
+    }
+
+    //maksimalna okrenutost tockova
+    if (rotY > 60) {
+        rotY = 60;
+    } else if (rotY < -60) {
+        rotY = -60;
     }
 
     // racunamo otpor u pravcu kretanja ovom jednostavnom formulom
@@ -189,6 +203,9 @@ static void on_update(int val) {
     // pomeramo poziciju automobila za njegovu trenutnu brzinu
     posX += vX;
     posZ += vZ;
+
+    //rotacija tockova
+    rotX += speed * 10;
 
     glutTimerFunc(16, on_update, 0);
     glutPostRedisplay();
@@ -317,10 +334,9 @@ static void on_display(void) {
      * Kreira se kocka i primenjuje se geometrijska transformacija na
      * istu.
      */
-    glTranslatef(posX, .5, posZ);
+    glTranslatef(posX, 0, posZ);
     glRotatef(angle + 180, 0, 1, 0);
     angle += 0.5;
-    glScalef(1, 1, 1);
 
     setup_car_material();
 
@@ -333,13 +349,13 @@ static void on_display(void) {
     for (int i = 0; i < model.tacaka; ++i) {
         // prednji tockovi
         if ((i >= model.pocetak_obj[16] && i < model.pocetak_obj[17])
-                || (i >= model.pocetak_obj[8] && i < model.pocetak_obj[9])) {
+            || (i >= model.pocetak_obj[8] && i < model.pocetak_obj[9])) {
             continue;
         }
 
         // zadnji tockovi
         if ((i >= model.pocetak_obj[9] && i < model.pocetak_obj[10])
-                || (i >= model.pocetak_obj[11] && i < model.pocetak_obj[12])) {
+            || (i >= model.pocetak_obj[11] && i < model.pocetak_obj[12])) {
             continue;
         }
 
@@ -347,7 +363,6 @@ static void on_display(void) {
         if (i < model.pocetak_obj[1]) {
             continue;
         }
-
         glTexCoord2f(model.tekstura[i].x, model.tekstura[i].y);
         glNormal3f(model.normale[i].x, model.normale[i].y, model.normale[i].z);
         glVertex3f(model.pozicije[i].x, model.pozicije[i].y, model.pozicije[i].z);
@@ -356,25 +371,74 @@ static void on_display(void) {
 
     glBindTexture(GL_TEXTURE_2D, wheel_texture);
 
-    glBegin(GL_TRIANGLES);
-    for (int i = 0; i < model.tacaka; ++i) {
-        // prednji tockovi
-        if ((i >= model.pocetak_obj[16] && i < model.pocetak_obj[17])
-            || (i >= model.pocetak_obj[8] && i < model.pocetak_obj[9])) {
-            glTexCoord2f(model.tekstura[i].x, model.tekstura[i].y);
-            glNormal3f(model.normale[i].x, model.normale[i].y, model.normale[i].z);
-            glVertex3f(model.pozicije[i].x, model.pozicije[i].y, model.pozicije[i].z);
-        }
+    glPushMatrix();
+    glTranslatef(0.73f, -0.26f, -1.2f);
+    glRotatef(rotY, 0, 1, 0);
+    glRotatef(-rotX, 1, 0, 0);
+    glTranslatef(-0.73f, 0.26f, 1.2f);
 
-        // zadnji tockovi
-        if ((i >= model.pocetak_obj[9] && i < model.pocetak_obj[10])
-            || (i >= model.pocetak_obj[11] && i < model.pocetak_obj[12])) {
-            glTexCoord2f(model.tekstura[i].x, model.tekstura[i].y);
-            glNormal3f(model.normale[i].x, model.normale[i].y, model.normale[i].z);
-            glVertex3f(model.pozicije[i].x, model.pozicije[i].y, model.pozicije[i].z);
-        }
+
+    glBegin(GL_TRIANGLES);
+    for (int i = model.pocetak_obj[16]; i < model.pocetak_obj[17]; i++) {
+        // prednji desni tocak
+        glTexCoord2f(model.tekstura[i].x, model.tekstura[i].y);
+        glNormal3f(model.normale[i].x, model.normale[i].y, model.normale[i].z);
+        glVertex3f(model.pozicije[i].x, model.pozicije[i].y, model.pozicije[i].z);
+
     }
     glEnd();
+
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(-0.73f, -0.26f, -1.2f);
+    glRotatef(rotY, 0, 1, 0);
+    glRotatef(-rotX, 1, 0, 0);
+    glTranslatef(0.73f, 0.26f, 1.2f);
+
+    glBegin(GL_TRIANGLES);
+    for (int i = model.pocetak_obj[8]; i < model.pocetak_obj[9]; i++) {
+        // prednji levi tocak
+        glTexCoord2f(model.tekstura[i].x, model.tekstura[i].y);
+        glNormal3f(model.normale[i].x, model.normale[i].y, model.normale[i].z);
+        glVertex3f(model.pozicije[i].x, model.pozicije[i].y, model.pozicije[i].z);
+
+    }
+    glEnd();
+
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(0.73f, -0.26f, 1.14f);
+    glRotatef(-rotX, 1, 0, 0);
+    glTranslatef(-0.73f, 0.26f, -1.14f);
+
+    glBegin(GL_TRIANGLES);
+    for (int i = model.pocetak_obj[9]; i < model.pocetak_obj[10]; i++) {
+        // zadnji desni tocak
+        glTexCoord2f(model.tekstura[i].x, model.tekstura[i].y);
+        glNormal3f(model.normale[i].x, model.normale[i].y, model.normale[i].z);
+        glVertex3f(model.pozicije[i].x, model.pozicije[i].y, model.pozicije[i].z);
+
+    }
+    glEnd();
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(-0.73f, -0.26f, 1.14f);
+    glRotatef(-rotX, 1, 0, 0);
+    glTranslatef(0.73f, 0.26f, -1.14f);
+
+    glBegin(GL_TRIANGLES);
+    for (int i = model.pocetak_obj[11]; i < model.pocetak_obj[12]; i++) {
+        // zadnji levi tocak
+        glTexCoord2f(model.tekstura[i].x, model.tekstura[i].y);
+        glNormal3f(model.normale[i].x, model.normale[i].y, model.normale[i].z);
+        glVertex3f(model.pozicije[i].x, model.pozicije[i].y, model.pozicije[i].z);
+
+    }
+    glEnd();
+    glPopMatrix();
 
     /*
      * ukljucivanje transparencije stakla, primer za transparentnost:
