@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include <memory.h>
 #include <stdio.h>
+#include <time.h>
 #include "texture.h"
 #include "model.h"
 
@@ -34,6 +35,8 @@ static MODEL model;
 
 static GLuint car_texture;
 static GLuint wheel_texture;
+static GLuint road_texture;
+static GLuint grass_texture;
 
 static float rotX = 0;
 static float rotY = 0;
@@ -58,6 +61,8 @@ static void write_text(float x, float y, const char *s);
 static void generate_road();
 
 int main(int argc, char **argv) {
+
+    srand((unsigned int) time(NULL));
     /* Inicijalizuje se GLUT. */
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
@@ -75,15 +80,20 @@ int main(int argc, char **argv) {
     glutDisplayFunc(on_display);
 
     /* Obavlja se OpenGL inicijalizacija. */
-    glClearColor(0.75, 0.75, 0.75, 0);
+    glClearColor(0.52, 0.8, 0.98, 0);
     glEnable(GL_DEPTH_TEST);
     glLineWidth(2);
 
     load_model("car.obj", &model);
     car_texture = loadBMP_custom("car.bmp");
     wheel_texture = loadBMP_custom("wheels.bmp");
+    road_texture = loadBMP_custom("asphalt.bmp");
+    grass_texture = loadBMP_custom("grass.bmp");
 
     generate_road();
+
+    posX = (tacke_puta[0].x + tacke_puta[1].x) / 2;
+    posZ = (tacke_puta[0].z + tacke_puta[1].z) / 2;
 
     /* Program ulazi u glavnu petlju. */
     glutTimerFunc(0, on_update, 0);
@@ -142,19 +152,18 @@ static void on_update(int val) {
 
     // konstante fizike
     float accelerationConstant = 0.04f; // konstanta ubrzanja automobila
-    float forwardFrictionContstant = accelerationConstant / 3; // koeficijent otpora u pravcu ka kome je auto okrenut
+    float forwardFrictionContstant = accelerationConstant / 2; // koeficijent otpora u pravcu ka kome je auto okrenut
     float sideFrictionConstant = 0.6f; // koeficijent otpora po strani automobila
-    float maxSpeed = 3.0f; // maksimalna brzina automobila
-    float turnSpeed = 30.0f; // brzina skretanja automobila
+    float maxSpeed = 2.0f; // maksimalna brzina automobila
+    float turnSpeed = 1.0f; // brzina skretanja automobila
 
     if (key_up) {
         // ukoliko igrac drzi strelicu napred, pravimo ubrzanje u pravcu nosa automobila
         accelerationX = sinf(angle * (float) M_PI / 180.0f) * accelerationConstant;
         accelerationZ = cosf(angle * (float) M_PI / 180.0f) * accelerationConstant;
     } else if (key_down) {
-        // ukoliko igrac drzi strelicu nazad, pravimo ubrzanje u suprotnom pravcu od nosa automobila
-        accelerationX = sinf(angle * (float) M_PI / 180.0f) * accelerationConstant;
-        accelerationZ = cosf(angle * (float) M_PI / 180.0f) * accelerationConstant;
+        // ukoliko igrac drzi strelicu nazad, kocenje
+        forwardFrictionContstant *= 5;
     }
 
     // trenutna vrednost brzine (skalarna)
@@ -330,14 +339,49 @@ static void on_display(void) {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     gluLookAt(
-            0, 50, 0.2,
-            0, 0, 0,
+            posX - sinf(angle * (float) M_PI / 180.0f) * 6, 1.5f, posZ - cosf(angle * (float) M_PI / 180.0f) * 6,
+            posX, 0.5f, posZ,
             0, 1, 0
     );
 
     setup_lightning();
 
-    glPushMatrix();
+    setup_car_material();
+
+    glShadeModel(GL_SMOOTH);
+    glEnable(GL_TEXTURE_2D);
+
+    glBindTexture(GL_TEXTURE_2D, grass_texture);
+
+    glBegin(GL_TRIANGLE_STRIP);
+    glNormal3f(0, 1, 0);
+    glTexCoord2f(-500, -500);
+    glVertex3f(-4000, -1.205f, -4000);
+
+    glNormal3f(0, 1, 0);
+    glTexCoord2f(-500, 500);
+    glVertex3f(-4000, -1.205f, 4000);
+
+    glNormal3f(0, 1, 0);
+    glTexCoord2f(500, -500);
+    glVertex3f(4000, -1.205f, -4000);
+
+    glNormal3f(0, 1, 0);
+    glTexCoord2f(500, 500);
+    glVertex3f(4000, -1.205f, 4000);
+
+    glEnd();
+
+    glBindTexture(GL_TEXTURE_2D, road_texture);
+
+    glBegin(GL_TRIANGLE_STRIP);
+    for (int i = 0; i < br_tacaka_puta; i++) {
+        glTexCoord2f(tacke_puta[i].x * 0.25f, tacke_puta[i].z * 0.25f);
+        glNormal3f(0, 1, 0);
+        glVertex3f(tacke_puta[i].x, tacke_puta[i].y, tacke_puta[i].z);
+    }
+    glEnd();
+
 
     /*
      * Kreira se kocka i primenjuje se geometrijska transformacija na
@@ -345,11 +389,6 @@ static void on_display(void) {
      */
     glTranslatef(posX, 0, posZ);
     glRotatef(angle + 180, 0, 1, 0);
-
-    setup_car_material();
-
-    glShadeModel(GL_SMOOTH);
-    glEnable(GL_TEXTURE_2D);
 
     glBindTexture(GL_TEXTURE_2D, car_texture);
 
@@ -471,17 +510,9 @@ static void on_display(void) {
     glDisable(GL_BLEND);
     glDisable(GL_LIGHTING);
 
-    glPopMatrix();
-
-    glBegin(GL_LINE_STRIP);
-    for (int i = 0; i < br_tacaka_puta; i++) {
-        glVertex3f(tacke_puta[i].x, tacke_puta[i].y, tacke_puta[i].z);
-    }
-    glEnd();
-
     //racuna se trenutna brzina: sqrt(vX^2 + vZ^2)
 
-    int speed = (int) (sqrtf(vX * vX + vZ * vZ) * 50);
+    int speed = (int) (sqrtf(vX * vX + vZ * vZ) * 50 * 3/2);
 
     char buff[200];
     sprintf(buff, "Speed: %d km/h", speed);
@@ -511,9 +542,11 @@ typedef struct {
 static VEKTOR3 hermitova(TACKA p, TACKA q, float t) {
     VEKTOR3 rezultat;
 
-    rezultat.y = 0;
-    rezultat.x = p.x + (q.x - p.x) * t;
-    rezultat.z = p.y + (q.y - p.y) * t;
+    rezultat.y = -1.2f;
+    rezultat.x = (2 * t * t * t - 3 * t * t + 1) * p.x + (t * t * t - 2 * t * t + t) * p.u +
+                 (-2 * t * t * t + 3 * t * t) * q.x + (t * t * t - t * t) * q.u;
+    rezultat.z = (2 * t * t * t - 3 * t * t + 1) * p.y + (t * t * t - 2 * t * t + t) * p.v +
+                 (-2 * t * t * t + 3 * t * t) * q.y + (t * t * t - t * t) * q.v;
 
     return rezultat;
 }
@@ -522,6 +555,7 @@ static void generate_road() {
 
     TACKA niz_tacaka[300];
 
+    TACKA niz_spoljnih_tacaka[300];
     /*
      * za crtanje kruga koristimo polarne koordinate x=qcosF i y=qsinF
      * pri cemu ce q random da se generise kako bi se dobio nepravilan krug
@@ -530,25 +564,40 @@ static void generate_road() {
     int i = 0;
     float ugao = 0;
     while (ugao < 360) {
-        float q = random__float_number(10, 15);
+        float q = random__float_number(16 * 100, 30 * 100);
         niz_tacaka[i].x = q * cosf(ugao * M_PI / 180.0f);
         niz_tacaka[i].y = q * sinf(ugao * M_PI / 180.0f);
-        ugao += random_number(5, 25);
 
-        niz_tacaka[i].u = random__float_number(-3, 3);
-        niz_tacaka[i].v = random__float_number(-3, 3);
+        niz_spoljnih_tacaka[i].x = (q + 18) * cosf(ugao * M_PI / 180.0f);
+        niz_spoljnih_tacaka[i].y = (q + 18) * sinf(ugao * M_PI / 180.0f);
+        ugao += random_number(15, 35);
 
         i++;
 
     }
 
+    /*
+     * formula generisanja vektora uzeta iz profesorkine skripte sa predavanja (Catmull-Rom)
+     */
+
     int j = 0;
+    for (j = 0; j < i; j++) {
+        niz_tacaka[j].u = (niz_tacaka[(j + 1) % i].x - niz_tacaka[(i + j - 1) % i].x) / 3.0f;
+        niz_tacaka[j].v = (niz_tacaka[(j + 1) % i].y - niz_tacaka[(i + j - 1) % i].y) / 3.0f;
+
+        niz_spoljnih_tacaka[j].u = (niz_tacaka[(j + 1) % i].x - niz_tacaka[(i + j - 1) % i].x) / 3.0f;
+        niz_spoljnih_tacaka[j].v = (niz_tacaka[(j + 1) % i].y - niz_tacaka[(i + j - 1) % i].y) / 3.0f;
+    }
+
     for (j = 0; j < i; j++) {
         float t = 0;
         while (t <= 1) {
             tacke_puta[br_tacaka_puta] = hermitova(niz_tacaka[j], niz_tacaka[(j + 1) % i], t);
-            t += 0.01;
             br_tacaka_puta++;
+            tacke_puta[br_tacaka_puta] = hermitova(niz_spoljnih_tacaka[j], niz_spoljnih_tacaka[(j + 1) % i], t);
+            br_tacaka_puta++;
+            t += 0.05;
+
         }
     }
 
