@@ -38,6 +38,9 @@ static GLuint wheel_texture;
 static float rotX = 0;
 static float rotY = 0;
 
+static VEKTOR3 tacke_puta[30000];
+static int br_tacaka_puta = 0;
+
 
 /* Deklaracije callback funkcija. */
 static void on_keyboard(int key, int x, int y);
@@ -51,6 +54,8 @@ static void on_reshape(int width, int height);
 static void on_display(void);
 
 static void write_text(float x, float y, const char *s);
+
+static void generate_road();
 
 int main(int argc, char **argv) {
     /* Inicijalizuje se GLUT. */
@@ -77,6 +82,8 @@ int main(int argc, char **argv) {
     load_model("car.obj", &model);
     car_texture = loadBMP_custom("car.bmp");
     wheel_texture = loadBMP_custom("wheels.bmp");
+
+    generate_road();
 
     /* Program ulazi u glavnu petlju. */
     glutTimerFunc(0, on_update, 0);
@@ -323,12 +330,14 @@ static void on_display(void) {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     gluLookAt(
-            0, 2, 3,
+            0, 50, 0.2,
             0, 0, 0,
             0, 1, 0
     );
 
     setup_lightning();
+
+    glPushMatrix();
 
     /*
      * Kreira se kocka i primenjuje se geometrijska transformacija na
@@ -336,7 +345,6 @@ static void on_display(void) {
      */
     glTranslatef(posX, 0, posZ);
     glRotatef(angle + 180, 0, 1, 0);
-    angle += 0.5;
 
     setup_car_material();
 
@@ -463,6 +471,14 @@ static void on_display(void) {
     glDisable(GL_BLEND);
     glDisable(GL_LIGHTING);
 
+    glPopMatrix();
+
+    glBegin(GL_LINE_STRIP);
+    for (int i = 0; i < br_tacaka_puta; i++) {
+        glVertex3f(tacke_puta[i].x, tacke_puta[i].y, tacke_puta[i].z);
+    }
+    glEnd();
+
     //racuna se trenutna brzina: sqrt(vX^2 + vZ^2)
 
     int speed = (int) (sqrtf(vX * vX + vZ * vZ) * 50);
@@ -476,4 +492,64 @@ static void on_display(void) {
 
     /* Nova slika se salje na ekran. */
     glutSwapBuffers();
+}
+
+//generise random broj i mapira ga u granice min i max
+static int random_number(int min, int max) {
+    return min + rand() % (max - min);
+}
+
+static float random__float_number(float min, float max) {
+    return min + (float) (rand()) / (float) (RAND_MAX) * (max - min);
+}
+
+typedef struct {
+    float x, y;
+    float u, v; //vektor tangenti
+} TACKA;
+
+static VEKTOR3 hermitova(TACKA p, TACKA q, float t) {
+    VEKTOR3 rezultat;
+
+    rezultat.y = 0;
+    rezultat.x = p.x + (q.x - p.x) * t;
+    rezultat.z = p.y + (q.y - p.y) * t;
+
+    return rezultat;
+}
+
+static void generate_road() {
+
+    TACKA niz_tacaka[300];
+
+    /*
+     * za crtanje kruga koristimo polarne koordinate x=qcosF i y=qsinF
+     * pri cemu ce q random da se generise kako bi se dobio nepravilan krug
+     * i ugao se random generise kako bismo dobili nepravilna rastojanja izmedju tacaka kruga
+     */
+    int i = 0;
+    float ugao = 0;
+    while (ugao < 360) {
+        float q = random__float_number(10, 15);
+        niz_tacaka[i].x = q * cosf(ugao * M_PI / 180.0f);
+        niz_tacaka[i].y = q * sinf(ugao * M_PI / 180.0f);
+        ugao += random_number(5, 25);
+
+        niz_tacaka[i].u = random__float_number(-3, 3);
+        niz_tacaka[i].v = random__float_number(-3, 3);
+
+        i++;
+
+    }
+
+    int j = 0;
+    for (j = 0; j < i; j++) {
+        float t = 0;
+        while (t <= 1) {
+            tacke_puta[br_tacaka_puta] = hermitova(niz_tacaka[j], niz_tacaka[(j + 1) % i], t);
+            t += 0.01;
+            br_tacaka_puta++;
+        }
+    }
+
 }
