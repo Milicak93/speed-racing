@@ -11,6 +11,7 @@ configure_file(car.bmp car.bmp COPYONLY)
 configure_file(wheels.bmp wheels.bmp COPYONLY)
 configure_file(asphalt.bmp asphalt.bmp COPYONLY)
 configure_file(grass.bmp grass.bmp COPYONLY)
+configure_file(start.bmp start.bmp COPYONLY)
 
 set(SOURCE_FILES main.c model.c model.h texture.c texture.h)
 add_executable(SpeedRacing ${SOURCE_FILES})

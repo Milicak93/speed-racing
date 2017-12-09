@@ -37,6 +37,7 @@ static GLuint car_texture;
 static GLuint wheel_texture;
 static GLuint road_texture;
 static GLuint grass_texture;
+static GLuint start_texture;
 
 static float rotX = 0;
 static float rotY = 0;
@@ -89,6 +90,7 @@ int main(int argc, char **argv) {
     wheel_texture = loadBMP_custom("wheels.bmp");
     road_texture = loadBMP_custom("asphalt.bmp");
     grass_texture = loadBMP_custom("grass.bmp");
+    start_texture = loadBMP_custom("start.bmp");
 
     generate_road();
 
@@ -369,6 +371,28 @@ static void on_display(void) {
     glNormal3f(0, 1, 0);
     glTexCoord2f(500, 500);
     glVertex3f(4000, -1.205f, 4000);
+
+    glEnd();
+
+    glBindTexture(GL_TEXTURE_2D, start_texture);
+
+    glBegin(GL_TRIANGLE_STRIP);
+
+    glNormal3f(0, 1, 0);
+    glTexCoord2f(0, 0);
+    glVertex3f(tacke_puta[0].x, tacke_puta[0].y + 0.005f, tacke_puta[0].z);
+
+    glNormal3f(0, 1, 0);
+    glTexCoord2f(1, 0);
+    glVertex3f(tacke_puta[1].x, tacke_puta[1].y + 0.005f, tacke_puta[1].z);
+
+    glNormal3f(0, 1, 0);
+    glTexCoord2f(0, 1);
+    glVertex3f(tacke_puta[2].x, tacke_puta[2].y + 0.005f, tacke_puta[2].z);
+
+    glNormal3f(0, 1, 0);
+    glTexCoord2f(1, 1);
+    glVertex3f(tacke_puta[3].x, tacke_puta[3].y + 0.005f, tacke_puta[3].z);
 
     glEnd();
 
