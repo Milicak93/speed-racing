@@ -512,7 +512,7 @@ static void on_display(void) {
 
     //racuna se trenutna brzina: sqrt(vX^2 + vZ^2)
 
-    int speed = (int) (sqrtf(vX * vX + vZ * vZ) * 50 * 3/2);
+    int speed = (int) (sqrtf(vX * vX + vZ * vZ) * 50 * 3 / 2);
 
     char buff[200];
     sprintf(buff, "Speed: %d km/h", speed);
@@ -601,4 +601,8 @@ static void generate_road() {
         }
     }
 
+    tacke_puta[br_tacaka_puta] = tacke_puta[0];
+    br_tacaka_puta++;
+    tacke_puta[br_tacaka_puta] = tacke_puta[1];
+    br_tacaka_puta++;
 }
