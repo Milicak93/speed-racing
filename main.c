@@ -150,6 +150,65 @@ static void on_keyboard_up(int key, int x, int y) {
     }
 }
 
+static bool on_road() {
+    float a1, b1, c1;
+    int broj_preseka = 0;
+
+    a1 = 0;
+    b1 = posX - 30000;
+    c1 = a1 * posX + b1 * posZ;
+
+    for (int i = 0; i < br_tacaka_puta / 2; i++) {
+        float a2, b2, c2;
+
+        // https://www.topcoder.com/community/data-science/data-science-tutorials/geometry-concepts-line-intersection-and-its-applications/
+
+        // unutrasnje linije
+        int ind1 = (i * 2) % br_tacaka_puta;
+        int ind2 = ((i + 1) * 2) % br_tacaka_puta;
+        a2 = tacke_puta[ind2].z - tacke_puta[ind1].z;
+        b2 = tacke_puta[ind1].x - tacke_puta[ind2].x;
+        c2 = a2 * tacke_puta[ind1].x + b2 * tacke_puta[ind1].z;
+
+        float det1 = a1 * b2 - a2 * b1;
+        if (fabsf(det1) > 0.0000001f) { // ako linije nisu paralelne
+            float presek_x = (b2 * c1 - b1 * c2) / det1;
+            float presek_z = (a1 * c2 - a2 * c1) / det1;
+
+            if (presek_x > posX &&
+                    presek_x > fminf(tacke_puta[ind1].x, tacke_puta[ind2].x) &&
+                    presek_x < fmaxf(tacke_puta[ind1].x, tacke_puta[ind2].x) &&
+                    presek_z > fminf(tacke_puta[ind1].z, tacke_puta[ind2].z) &&
+                    presek_z < fmaxf(tacke_puta[ind1].z, tacke_puta[ind2].z)) {
+                ++broj_preseka;
+            }
+        }
+
+        // spoljne linije
+        ind1 = (i * 2 + 1) % br_tacaka_puta;
+        ind2 = ((i + 1) * 2 + 1) % br_tacaka_puta;
+        a2 = tacke_puta[ind2].z - tacke_puta[ind1].z;
+        b2 = tacke_puta[ind1].x - tacke_puta[ind2].x;
+        c2 = a2 * tacke_puta[ind1].x + b2 * tacke_puta[ind1].z;
+
+        det1 = a1 * b2 - a2 * b1;
+        if (fabsf(det1) > 0.0000001f) { // ako linije nisu paralelne
+            float presek_x = (b2 * c1 - b1 * c2) / det1;
+            float presek_z = (a1 * c2 - a2 * c1) / det1;
+
+            if (presek_x > posX &&
+                presek_x > fminf(tacke_puta[ind1].x, tacke_puta[ind2].x) &&
+                presek_x < fmaxf(tacke_puta[ind1].x, tacke_puta[ind2].x) &&
+                presek_z > fminf(tacke_puta[ind1].z, tacke_puta[ind2].z) &&
+                presek_z < fmaxf(tacke_puta[ind1].z, tacke_puta[ind2].z)) {
+                ++broj_preseka;
+            }
+        }
+    }
+
+    return (broj_preseka % 2 == 1);
+}
+
 /* funkcija osvezavanja cele igrice (pomeranje objekata - logika igrice) */
 static void on_update(int val) {
     /*
@@ -174,6 +233,10 @@ static void on_update(int val) {
     } else if (key_down) {
         // ukoliko igrac drzi strelicu nazad, kocenje
         forwardFrictionContstant *= 5;
+    }
+
+    if (!on_road()) {
+        forwardFrictionContstant *= 4;
     }
 
     // trenutna vrednost brzine (skalarna)
