@@ -354,6 +354,27 @@ static void setup_lightning() {
 
 }
 
+static void setup_road_material() {
+
+    /* Koeficijenti ambijentalne refleksije materijala. */
+    GLfloat ambient_coeffs[] = {1, 1, 1, 1};
+
+    /* Koeficijenti difuzne refleksije materijala. */
+    GLfloat diffuse_coeffs[] = {1, 1, 1, 1};
+
+    /* Koeficijenti spekularne refleksije materijala. */
+    GLfloat specular_coeffs[] = {0, 0, 0, 1};
+
+    /* Koeficijent glatkosti materijala. */
+    GLfloat shininess = 1;
+
+    /* Podesavaju se parametri materijala. */
+    glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_coeffs);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_coeffs);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, specular_coeffs);
+    glMaterialf(GL_FRONT, GL_SHININESS, shininess);
+}
+
 static void setup_car_material() {
 
     /* Koeficijenti ambijentalne refleksije materijala. */
@@ -423,7 +444,7 @@ static void on_display(void) {
 
     setup_lightning();
 
-    setup_car_material();
+    setup_road_material();
 
     glShadeModel(GL_SMOOTH);
     glEnable(GL_TEXTURE_2D);
@@ -481,6 +502,7 @@ static void on_display(void) {
     }
     glEnd();
 
+    setup_car_material();
 
     /*
      * Kreira se kocka i primenjuje se geometrijska transformacija na
