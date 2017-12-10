@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
     glEnable(GL_DEPTH_TEST);
     glLineWidth(2);
 
-    load_model("car.obj", &model);
+    load_model("car.model", &model);
     car_texture = loadBMP_custom("car.bmp");
     wheel_texture = loadBMP_custom("wheels.bmp");
     road_texture = loadBMP_custom("asphalt.bmp");
