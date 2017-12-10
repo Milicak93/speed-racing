@@ -375,13 +375,35 @@ static void setup_road_material() {
     glMaterialf(GL_FRONT, GL_SHININESS, shininess);
 }
 
+static void setup_red_material() {
+
+    /* Koeficijenti ambijentalne refleksije materijala. */
+    GLfloat ambient_coeffs[] = {1, 0, 0, 1};
+
+    /* Koeficijenti difuzne refleksije materijala. */
+    GLfloat diffuse_coeffs[] = {1, 0, 0, 1};
+
+    /* Koeficijenti spekularne refleksije materijala. */
+    GLfloat specular_coeffs[] = {0, 0, 0, 1};
+
+    /* Koeficijent glatkosti materijala. */
+    GLfloat shininess = 1;
+
+    /* Podesavaju se parametri materijala. */
+    glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_coeffs);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_coeffs);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, specular_coeffs);
+    glMaterialf(GL_FRONT, GL_SHININESS, shininess);
+}
+
+
 static void setup_car_material() {
 
     /* Koeficijenti ambijentalne refleksije materijala. */
-    GLfloat ambient_coeffs[] = {0.2, 0.2, 0.2, 1};
+    GLfloat ambient_coeffs[] = {0.6f, 0.6f, 0.6f, 1};
 
     /* Koeficijenti difuzne refleksije materijala. */
-    GLfloat diffuse_coeffs[] = {0.8, 0.8, 0.8, 1};
+    GLfloat diffuse_coeffs[] = {1, 1, 1, 1};
 
     /* Koeficijenti spekularne refleksije materijala. */
     GLfloat specular_coeffs[] = {1, 1, 1, 1};
@@ -453,19 +475,19 @@ static void on_display(void) {
 
     glBegin(GL_TRIANGLE_STRIP);
     glNormal3f(0, 1, 0);
-    glTexCoord2f(-500, -500);
+    glTexCoord2f(-50, -50);
     glVertex3f(-4000, -1.205f, -4000);
 
     glNormal3f(0, 1, 0);
-    glTexCoord2f(-500, 500);
+    glTexCoord2f(-50, 50);
     glVertex3f(-4000, -1.205f, 4000);
 
     glNormal3f(0, 1, 0);
-    glTexCoord2f(500, -500);
+    glTexCoord2f(50, -50);
     glVertex3f(4000, -1.205f, -4000);
 
     glNormal3f(0, 1, 0);
-    glTexCoord2f(500, 500);
+    glTexCoord2f(50, 50);
     glVertex3f(4000, -1.205f, 4000);
 
     glEnd();
@@ -501,6 +523,96 @@ static void on_display(void) {
         glVertex3f(tacke_puta[i].x, tacke_puta[i].y, tacke_puta[i].z);
     }
     glEnd();
+
+    glDisable(GL_TEXTURE_2D);
+
+    glBegin(GL_TRIANGLES);
+    glNormal3f(0, 1, 0);
+    // Unutrasnje bele trake pored puta
+    for (int i = 0; i < br_tacaka_puta / 4; i++) {
+        float nX, nZ, nX1, nZ1;
+        nX = tacke_puta[i * 4].x - (tacke_puta[i * 4 + 1].x - tacke_puta[i * 4].x) * 0.1f;
+        nZ = tacke_puta[i * 4].z - (tacke_puta[i * 4 + 1].z - tacke_puta[i * 4].z) * 0.1f;
+
+        nX1 = tacke_puta[i * 4 + 2].x - (tacke_puta[i * 4 + 3].x - tacke_puta[i * 4 + 2].x) * 0.1f;
+        nZ1 = tacke_puta[i * 4 + 2].z - (tacke_puta[i * 4 + 3].z - tacke_puta[i * 4 + 2].z) * 0.1f;
+
+        glVertex3f(tacke_puta[i * 4].x, tacke_puta[i * 4].y + 0.005f, tacke_puta[i * 4].z);
+        glVertex3f(tacke_puta[i * 4 + 2].x, tacke_puta[i * 4].y + 0.005f, tacke_puta[i * 4 + 2].z);
+        glVertex3f(nX, tacke_puta[i * 4].y + 0.005f, nZ);
+
+        glVertex3f(tacke_puta[i * 4 + 2].x, tacke_puta[i * 4].y + 0.005f, tacke_puta[i * 4 + 2].z);
+        glVertex3f(nX, tacke_puta[i * 4].y + 0.005f, nZ);
+        glVertex3f(nX1, tacke_puta[i * 4].y + 0.005f, nZ1);
+    }
+    glEnd();
+
+    glBegin(GL_TRIANGLES);
+    glNormal3f(0, 1, 0);
+    // Spoljne bele trake pored puta
+    for (int i = 0; i < br_tacaka_puta / 4; i++) {
+        float nX, nZ, nX1, nZ1;
+        nX = tacke_puta[i * 4].x + (tacke_puta[i * 4 + 1].x - tacke_puta[i * 4].x) * 1.1f;
+        nZ = tacke_puta[i * 4].z + (tacke_puta[i * 4 + 1].z - tacke_puta[i * 4].z) * 1.1f;
+
+        nX1 = tacke_puta[i * 4 + 2].x + (tacke_puta[i * 4 + 3].x - tacke_puta[i * 4 + 2].x) * 1.1f;
+        nZ1 = tacke_puta[i * 4 + 2].z + (tacke_puta[i * 4 + 3].z - tacke_puta[i * 4 + 2].z) * 1.1f;
+
+        glVertex3f(tacke_puta[i * 4 + 1].x, tacke_puta[i * 4 + 1].y + 0.005f, tacke_puta[i * 4 + 1].z);
+        glVertex3f(tacke_puta[i * 4 + 3].x, tacke_puta[i * 4].y + 0.005f, tacke_puta[i * 4 + 3].z);
+        glVertex3f(nX, tacke_puta[i * 4].y + 0.005f, nZ);
+
+        glVertex3f(tacke_puta[i * 4 + 3].x, tacke_puta[i * 4].y + 0.005f, tacke_puta[i * 4 + 3].z);
+        glVertex3f(nX, tacke_puta[i * 4].y + 0.005f, nZ);
+        glVertex3f(nX1, tacke_puta[i * 4].y + 0.005f, nZ1);
+    }
+    glEnd();
+
+    setup_red_material();
+
+    glBegin(GL_TRIANGLES);
+    glNormal3f(0, 1, 0);
+    // Unutrasnje crvene trake pored puta
+    for (int i = 0; i < br_tacaka_puta / 4; i++) {
+        float nX, nZ, nX1, nZ1;
+        nX = tacke_puta[i * 4 + 2].x - (tacke_puta[i * 4 + 3].x - tacke_puta[i * 4 + 2].x) * 0.1f;
+        nZ = tacke_puta[i * 4 + 2].z - (tacke_puta[i * 4 + 3].z - tacke_puta[i * 4 + 2].z) * 0.1f;
+
+        nX1 = tacke_puta[i * 4 + 4].x - (tacke_puta[i * 4 + 5].x - tacke_puta[i * 4 + 4].x) * 0.1f;
+        nZ1 = tacke_puta[i * 4 + 4].z - (tacke_puta[i * 4 + 5].z - tacke_puta[i * 4 + 4].z) * 0.1f;
+
+        glVertex3f(tacke_puta[i * 4 + 2].x, tacke_puta[i * 4].y + 0.005f, tacke_puta[i * 4 + 2].z);
+        glVertex3f(tacke_puta[i * 4 + 4].x, tacke_puta[i * 4].y + 0.005f, tacke_puta[i * 4 + 4].z);
+        glVertex3f(nX, tacke_puta[i * 4].y + 0.005f, nZ);
+
+        glVertex3f(tacke_puta[i * 4 + 4].x, tacke_puta[i * 4].y + 0.005f, tacke_puta[i * 4 + 4].z);
+        glVertex3f(nX, tacke_puta[i * 4].y + 0.005f, nZ);
+        glVertex3f(nX1, tacke_puta[i * 4].y + 0.005f, nZ1);
+    }
+    glEnd();
+
+    glBegin(GL_TRIANGLES);
+    glNormal3f(0, 1, 0);
+    // Spoljasnje crvene trake pored puta
+    for (int i = 0; i < br_tacaka_puta / 4; i++) {
+        float nX, nZ, nX1, nZ1;
+        nX = tacke_puta[i * 4 + 2].x + (tacke_puta[i * 4 + 3].x - tacke_puta[i * 4 + 2].x) * 1.1f;
+        nZ = tacke_puta[i * 4 + 2].z + (tacke_puta[i * 4 + 3].z - tacke_puta[i * 4 + 2].z) * 1.1f;
+
+        nX1 = tacke_puta[i * 4 + 4].x + (tacke_puta[i * 4 + 5].x - tacke_puta[i * 4 + 4].x) * 1.1f;
+        nZ1 = tacke_puta[i * 4 + 4].z + (tacke_puta[i * 4 + 5].z - tacke_puta[i * 4 + 4].z) * 1.1f;
+
+        glVertex3f(tacke_puta[i * 4 + 3].x, tacke_puta[i * 4].y + 0.005f, tacke_puta[i * 4 + 3].z);
+        glVertex3f(tacke_puta[i * 4 + 5].x, tacke_puta[i * 4].y + 0.005f, tacke_puta[i * 4 + 5].z);
+        glVertex3f(nX, tacke_puta[i * 4].y + 0.005f, nZ);
+
+        glVertex3f(tacke_puta[i * 4 + 5].x, tacke_puta[i * 4].y + 0.005f, tacke_puta[i * 4 + 5].z);
+        glVertex3f(nX, tacke_puta[i * 4].y + 0.005f, nZ);
+        glVertex3f(nX1, tacke_puta[i * 4].y + 0.005f, nZ1);
+    }
+    glEnd();
+
+    glEnable(GL_TEXTURE_2D);
 
     setup_car_material();
 
