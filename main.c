@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
 
     /* Kreira se prozor. */
-    glutInitWindowSize(600, 600);
+    glutInitWindowSize(1024, 768);
     glutInitWindowPosition(100, 100);
     glutCreateWindow(argv[0]);
 
@@ -98,8 +98,8 @@ int main(int argc, char **argv) {
 
     generate_road();
 
-    posX = (tacke_puta[0].x + tacke_puta[1].x) / 2;
-    posZ = (tacke_puta[0].z + tacke_puta[1].z) / 2;
+    posX = (tacke_puta[br_tacaka_puta - 4].x + tacke_puta[br_tacaka_puta - 3].x) / 2;
+    posZ = (tacke_puta[br_tacaka_puta - 4].z + tacke_puta[br_tacaka_puta - 3].z) / 2;
 
     /* Program ulazi u glavnu petlju. */
     glutTimerFunc(0, on_update, 0);
