@@ -27,6 +27,7 @@ static bool key_right = false;
 static float posX = 0;
 static float posZ = 0;
 static float angle = 0;
+static float camera_angle = 180;
 
 static float vX = 0;
 static float vZ = 0;
@@ -225,6 +226,9 @@ static void on_update(int val) {
     //rotacija tockova
     rotX += speed * 100;
 
+    //camera prati auto sa malim zakasnjenjem
+    camera_angle = camera_angle + (angle - camera_angle) * 0.02f;
+
     glutTimerFunc(16, on_update, 0);
     glutPostRedisplay();
 }
@@ -341,7 +345,8 @@ static void on_display(void) {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     gluLookAt(
-            posX - sinf(angle * (float) M_PI / 180.0f) * 6, 1.5f, posZ - cosf(angle * (float) M_PI / 180.0f) * 6,
+            posX - sinf(camera_angle * (float) M_PI / 180.0f) * 6, 1.5f,
+            posZ - cosf(camera_angle * (float) M_PI / 180.0f) * 6,
             posX, 0.5f, posZ,
             0, 1, 0
     );
