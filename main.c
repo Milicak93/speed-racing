@@ -224,7 +224,7 @@ static void on_update(int val) {
     float forwardFrictionContstant = accelerationConstant / 2; // koeficijent otpora u pravcu ka kome je auto okrenut
     float sideFrictionConstant = 0.6f; // koeficijent otpora po strani automobila
     float maxSpeed = 2.0f; // maksimalna brzina automobila
-    float turnSpeed = 1.0f; // brzina skretanja automobila
+    float turnSpeed = 8.0f; // brzina skretanja automobila
 
     if (key_up) {
         // ukoliko igrac drzi strelicu napred, pravimo ubrzanje u pravcu nosa automobila
@@ -247,11 +247,9 @@ static void on_update(int val) {
     // ona ce efektivno biti 0 kada automobil stoji, dok ce biti maksimalna (1) pri maksimalnoj brzini
     // time postizemo da automobil ima brze skretanje sto se brze krece i takodje da ne moze skretati u mestu
     if (key_right) {
-        angle -= turnSpeed * speed / maxSpeed;
-        rotY -= 3; //okretanje tockova
+        rotY -= 0.5f; //okretanje tockova
     } else if (key_left) {
-        angle += turnSpeed * speed / maxSpeed;
-        rotY += 3;
+        rotY += 0.5f;
     } else {
         rotY *= 0.8; //vracanje tockova ka napred nakon skretanja
     }
@@ -262,6 +260,8 @@ static void on_update(int val) {
     } else if (rotY < -45) {
         rotY = -45;
     }
+
+    angle += turnSpeed * rotY / 45.0f * speed / maxSpeed;
 
     // racunamo otpor u pravcu kretanja ovom jednostavnom formulom
     // prosto uzimamo brzinu auta pomnozenu sa konstantom i oduzimamo je
