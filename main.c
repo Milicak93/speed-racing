@@ -23,6 +23,7 @@ static bool key_up = false;
 static bool key_down = false;
 static bool key_left = false;
 static bool key_right = false;
+static bool moved = false;
 
 static float posX = 0;
 static float posZ = 0;
@@ -46,6 +47,7 @@ static float rotY = 0;
 static VEKTOR3 tacke_puta[30000];
 static int br_tacaka_puta = 0;
 
+static long start_time;
 
 /* Deklaracije callback funkcija. */
 static void on_keyboard(int key, int x, int y);
@@ -65,6 +67,7 @@ static void generate_road();
 int main(int argc, char **argv) {
 
     srand((unsigned int) time(NULL));
+
     /* Inicijalizuje se GLUT. */
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
@@ -118,6 +121,10 @@ static void on_keyboard(int key, int x, int y) {
             break;
         case GLUT_KEY_UP:
             key_up = true;
+            if (!moved) {
+                moved = true;
+                start_time = time(NULL);
+            }
             break;
         case 27:
             exit(1);
@@ -549,6 +556,10 @@ static void on_display(void) {
     glColor3f(0, 0, 0);
     write_text(0, 0.9, buff);
 
+    sprintf(buff, "Elapsed time: %d sec", time(NULL) - start_time);
+    if (moved) {
+        write_text(-0.9f, 0.9f, buff);
+    }
 
     /* Nova slika se salje na ekran. */
     glutSwapBuffers();
