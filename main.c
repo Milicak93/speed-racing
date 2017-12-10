@@ -24,6 +24,7 @@ static bool key_down = false;
 static bool key_left = false;
 static bool key_right = false;
 static bool moved = false;
+static bool on_start = true;
 
 static float posX = 0;
 static float posZ = 0;
@@ -48,6 +49,7 @@ static VEKTOR3 tacke_puta[30000];
 static int br_tacaka_puta = 0;
 
 static long start_time;
+static long najbolji_krug = -1;
 
 /* Deklaracije callback funkcija. */
 static void on_keyboard(int key, int x, int y);
@@ -176,10 +178,10 @@ static bool on_road() {
             float presek_z = (a1 * c2 - a2 * c1) / det1;
 
             if (presek_x > posX &&
-                    presek_x > fminf(tacke_puta[ind1].x, tacke_puta[ind2].x) &&
-                    presek_x < fmaxf(tacke_puta[ind1].x, tacke_puta[ind2].x) &&
-                    presek_z > fminf(tacke_puta[ind1].z, tacke_puta[ind2].z) &&
-                    presek_z < fmaxf(tacke_puta[ind1].z, tacke_puta[ind2].z)) {
+                presek_x > fminf(tacke_puta[ind1].x, tacke_puta[ind2].x) &&
+                presek_x < fmaxf(tacke_puta[ind1].x, tacke_puta[ind2].x) &&
+                presek_z > fminf(tacke_puta[ind1].z, tacke_puta[ind2].z) &&
+                presek_z < fmaxf(tacke_puta[ind1].z, tacke_puta[ind2].z)) {
                 ++broj_preseka;
             }
         }
@@ -220,7 +222,7 @@ static void on_update(int val) {
     float accelerationX = 0.0f, accelerationZ = 0.0f;
 
     // konstante fizike
-    float accelerationConstant = 0.04f; // konstanta ubrzanja automobila
+    float accelerationConstant = 0.02f; // konstanta ubrzanja automobila
     float forwardFrictionContstant = accelerationConstant / 2; // koeficijent otpora u pravcu ka kome je auto okrenut
     float sideFrictionConstant = 0.6f; // koeficijent otpora po strani automobila
     float maxSpeed = 2.0f; // maksimalna brzina automobila
@@ -298,6 +300,22 @@ static void on_update(int val) {
 
     //camera prati auto sa malim zakasnjenjem
     camera_angle = camera_angle + (angle - camera_angle) * 0.02f;
+
+    float startX = (tacke_puta[0].x + tacke_puta[1].x) / 2;
+    float startZ = (tacke_puta[0].z + tacke_puta[1].z) / 2;
+
+    if (sqrtf((startX - posX) * (startX - posX) + (startZ - posZ) * (startZ - posZ)) < 35.0f) {
+        if (!on_start) {
+            long vreme_kruga = time(NULL) - start_time;
+            if (najbolji_krug == -1 || najbolji_krug > vreme_kruga) {
+                najbolji_krug = vreme_kruga;
+            }
+        }
+        start_time = time(NULL);
+        on_start = true;
+    } else {
+        on_start = false;
+    }
 
     glutTimerFunc(16, on_update, 0);
     glutPostRedisplay();
@@ -753,9 +771,14 @@ static void on_display(void) {
     glColor3f(0, 0, 0);
     write_text(0, 0.9, buff);
 
-    sprintf(buff, "Elapsed time: %d sec", time(NULL) - start_time);
+    sprintf(buff, "Lap time: %d sec", time(NULL) - start_time);
     if (moved) {
         write_text(-0.9f, 0.9f, buff);
+    }
+
+    if (najbolji_krug != -1) {
+        sprintf(buff, "Best lap: %d sec", najbolji_krug);
+        write_text(-0.9f, 0.85f, buff);
     }
 
     /* Nova slika se salje na ekran. */
