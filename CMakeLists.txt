@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 11 -framework OpenGL -framework GLUT)
 
 find_package (OpenGL REQUIRED)
 find_package (GLUT REQUIRED)
+include_directories(${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIR})
 
 configure_file(car.model car.model COPYONLY)
 configure_file(car.bmp car.bmp COPYONLY)
