@@ -671,9 +671,9 @@ static void generate_road() {
         niz_tacaka[i].x = q * cosf(ugao * M_PI / 180.0f);
         niz_tacaka[i].y = q * sinf(ugao * M_PI / 180.0f);
 
-        niz_spoljnih_tacaka[i].x = (q + 18) * cosf(ugao * M_PI / 180.0f);
-        niz_spoljnih_tacaka[i].y = (q + 18) * sinf(ugao * M_PI / 180.0f);
-        ugao += random_number(15, 35);
+        niz_spoljnih_tacaka[i].x = (q + 30) * cosf(ugao * M_PI / 180.0f);
+        niz_spoljnih_tacaka[i].y = (q + 30) * sinf(ugao * M_PI / 180.0f);
+        ugao += random_number(10, 20);
 
         i++;
 
