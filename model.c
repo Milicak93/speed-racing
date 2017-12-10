@@ -17,9 +17,13 @@ void load_model(const char *file_name, MODEL *output) {
 
     FILE *file = fopen(file_name, "r");
 
-    VEKTOR3 v3[70000], n3[70000];
-    KORD_TEKSTURE t2[70000];
+    VEKTOR3 *v3, *n3;
+    KORD_TEKSTURE *t2;
     int v_count = 0, n_count = 0, t_count = 0;
+
+    v3 = (VEKTOR3 *) malloc(70000 * sizeof(VEKTOR3));
+    n3 = (VEKTOR3 *) malloc(70000 * sizeof(VEKTOR3));
+    t2 = (KORD_TEKSTURE *) malloc(70000 * sizeof(KORD_TEKSTURE));
 
     output->pozicije = (VEKTOR3 *) malloc(70000 * sizeof(VEKTOR3));
     output->tekstura = (KORD_TEKSTURE *) malloc(70000 * sizeof(KORD_TEKSTURE));
@@ -70,6 +74,10 @@ void load_model(const char *file_name, MODEL *output) {
         }
 
     }
+
+    free(v3);
+    free(n3);
+    free(t2);
 
     fclose(file);
 }
