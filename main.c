@@ -473,68 +473,7 @@ static void setup_glass_material() {
     glMaterialf(GL_FRONT, GL_SHININESS, shininess);
 }
 
-static void on_display(void) {
-    /* Brise se prethodni sadrzaj prozora. */
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    /* Podesava se viewport. */
-    glViewport(0, 0, window_width, window_height);
-
-    /* Podesava se projekcija. */
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(
-            60,
-            window_width / (float) window_height,
-            0.3, 500);
-
-    /* Podesava se tacka pogleda. */
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
-    /*
-     * Dodato je gore u kodu (u on_keyboard funkciji) da na 'c' menja bool vrednost promenljive cam_front.
-     * Ukoliko je cam_front false, camera gleda iza automobila, 3rd person, a ukoliko je true, gleda iz lica vozaca.
-     * Zato su prethodni koeficijenti stavljeni u promenljive, koje se menjaju ukoliko je cam_front true ili false.
-     * cam_pos je distanca kamere od centra automobila, pomerenog ka sofersajbni za 0.5
-     * y_view je pozicija kamere po y osi, y_look je pozicija tacke gledanja po y osi.
-     * Napomena: Koeficijenti su dobijeni iskljucivo eksperimentisanjem.
-     */
-
-
-    if (cam_front == true) {
-        if (cam_pos > 0.8f)
-            cam_pos -= 0.1;
-        if (y_view > 0.4f)
-            y_view -= 0.03f;
-        if (y_look > 0.25f)
-            y_look -= 0.03f;
-    }else {
-        if (cam_pos < 6)
-            cam_pos += 0.1;
-        if (y_view < 1.5f)
-            y_view += 0.03f;
-        if (y_look < 0.5f)
-            y_look += 0.03f;
-
-    }
-    gluLookAt(
-            (posX + sinf(angle * (float) M_PI / 180.0f) * 0.5f) - sinf(camera_angle * (float) M_PI / 180.0f) * cam_pos,
-            y_view,
-            (posZ + cosf(angle * (float) M_PI / 180.0f) * 0.5f) - cosf(camera_angle * (float) M_PI / 180.0f) * cam_pos,
-            (posX + sinf(angle * (float) M_PI / 180.0f) * 0.5f),
-            y_look,
-            (posZ + cosf(angle * (float) M_PI / 180.0f) * 0.5f),
-            0, 1, 0
-    );
-
-    setup_lightning();
-
-    setup_road_material();
-
-    glShadeModel(GL_SMOOTH);
-    glEnable(GL_TEXTURE_2D);
-
+static void draw_grass() {
     glBindTexture(GL_TEXTURE_2D, grass_texture);
 
     glBegin(GL_TRIANGLE_STRIP);
@@ -555,7 +494,9 @@ static void on_display(void) {
     glVertex3f(4000, -1.205f, 4000);
 
     glEnd();
+}
 
+static void draw_start_line() {
     glBindTexture(GL_TEXTURE_2D, start_texture);
 
     glBegin(GL_TRIANGLE_STRIP);
@@ -578,6 +519,10 @@ static void on_display(void) {
 
     glEnd();
 
+}
+
+static void draw_road() {
+
     glBindTexture(GL_TEXTURE_2D, road_texture);
 
     glBegin(GL_TRIANGLE_STRIP);
@@ -588,8 +533,9 @@ static void on_display(void) {
     }
     glEnd();
 
-    glDisable(GL_TEXTURE_2D);
+}
 
+static void draw_road_stripes() {
     glBegin(GL_TRIANGLES);
     glNormal3f(0, 1, 0);
     // Unutrasnje bele trake pored puta
@@ -676,17 +622,16 @@ static void on_display(void) {
     }
     glEnd();
 
-    glEnable(GL_TEXTURE_2D);
+}
 
-    setup_car_material();
-
-    /*
-     * Kreira se kocka i primenjuje se geometrijska transformacija na
-     * istu.
-     */
-    glTranslatef(posX, 0, posZ);
-    glRotatef(angle + 180, 0, 1, 0);
-
+/*
+ * preskacemo crtanje prednjih i zadnjih tockova, kao i stakla, jer tockove obradjujemo posebno zbog rotacije
+ * i stakla zbog transparentnosti
+ *
+ * U blenderu sam nasla koji partovi u car.model se odnose na koje delove automobila, a pri ucitavanju modela sam pamtila
+ * ofset pocetka svakog dela (to je ovo pocetak_obj)
+ */
+static void draw_car_base() {
     glBindTexture(GL_TEXTURE_2D, car_texture);
 
     glBegin(GL_TRIANGLES);
@@ -712,6 +657,11 @@ static void on_display(void) {
         glVertex3f(model.pozicije[i].x, model.pozicije[i].y, model.pozicije[i].z);
     }
     glEnd();
+
+
+}
+
+static void draw_wheels() {
 
     glBindTexture(GL_TEXTURE_2D, wheel_texture);
 
@@ -783,6 +733,107 @@ static void on_display(void) {
     }
     glEnd();
     glPopMatrix();
+}
+
+static void draw_glass() {
+    glBegin(GL_TRIANGLES);
+    glColor4f(1, 1, 1, 1);
+    for (int i = 0; i < model.pocetak_obj[1]; ++i) {
+        glNormal3f(model.normale[i].x, model.normale[i].y, model.normale[i].z);
+        glVertex3f(model.pozicije[i].x, model.pozicije[i].y, model.pozicije[i].z);
+    }
+
+    glEnd();
+
+
+}
+
+static void on_display(void) {
+    /* Brise se prethodni sadrzaj prozora. */
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    /* Podesava se viewport. */
+    glViewport(0, 0, window_width, window_height);
+
+    /* Podesava se projekcija. */
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(
+            60,
+            window_width / (float) window_height,
+            0.3, 500);
+
+    /* Podesava se tacka pogleda. */
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    /*
+     * Dodato je gore u kodu (u on_keyboard funkciji) da na 'c' menja bool vrednost promenljive cam_front.
+     * Ukoliko je cam_front false, camera gleda iza automobila, 3rd person, a ukoliko je true, gleda iz lica vozaca.
+     * Zato su prethodni koeficijenti stavljeni u promenljive, koje se menjaju ukoliko je cam_front true ili false.
+     * cam_pos je distanca kamere od centra automobila, pomerenog ka sofersajbni za 0.5
+     * y_view je pozicija kamere po y osi, y_look je pozicija tacke gledanja po y osi.
+     * Napomena: Koeficijenti su dobijeni iskljucivo eksperimentisanjem.
+     */
+
+
+    if (cam_front == true) {
+        if (cam_pos > 0.8f)
+            cam_pos -= 0.1;
+        if (y_view > 0.4f)
+            y_view -= 0.03f;
+        if (y_look > 0.25f)
+            y_look -= 0.03f;
+    } else {
+        if (cam_pos < 6)
+            cam_pos += 0.1;
+        if (y_view < 1.5f)
+            y_view += 0.03f;
+        if (y_look < 0.5f)
+            y_look += 0.03f;
+
+    }
+    gluLookAt(
+            (posX + sinf(angle * (float) M_PI / 180.0f) * 0.5f) - sinf(camera_angle * (float) M_PI / 180.0f) * cam_pos,
+            y_view,
+            (posZ + cosf(angle * (float) M_PI / 180.0f) * 0.5f) - cosf(camera_angle * (float) M_PI / 180.0f) * cam_pos,
+            (posX + sinf(angle * (float) M_PI / 180.0f) * 0.5f),
+            y_look,
+            (posZ + cosf(angle * (float) M_PI / 180.0f) * 0.5f),
+            0, 1, 0
+    );
+
+    setup_lightning();
+
+    setup_road_material();
+
+    glShadeModel(GL_SMOOTH);
+    glEnable(GL_TEXTURE_2D);
+
+    draw_grass();
+
+    draw_start_line();
+
+    draw_road();
+
+    glDisable(GL_TEXTURE_2D);
+
+    draw_road_stripes();
+
+    glEnable(GL_TEXTURE_2D);
+
+    setup_car_material();
+
+    /*
+     * Kreira se kocka i primenjuje se geometrijska transformacija na
+     * istu.
+     */
+    glTranslatef(posX, 0, posZ);
+    glRotatef(angle + 180, 0, 1, 0);
+
+    draw_car_base();
+
+    draw_wheels();
 
     /*
      * ukljucivanje transparencije stakla, primer za transparentnost:
@@ -795,14 +846,7 @@ static void on_display(void) {
 
     setup_glass_material();
 
-    glBegin(GL_TRIANGLES);
-    glColor4f(1, 1, 1, 1);
-    for (int i = 0; i < model.pocetak_obj[1]; ++i) {
-        glNormal3f(model.normale[i].x, model.normale[i].y, model.normale[i].z);
-        glVertex3f(model.pozicije[i].x, model.pozicije[i].y, model.pozicije[i].z);
-    }
-
-    glEnd();
+    draw_glass();
 
     glDisable(GL_BLEND);
     glDisable(GL_LIGHTING);
