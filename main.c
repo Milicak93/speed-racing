@@ -25,6 +25,7 @@ static bool key_left = false;
 static bool key_right = false;
 static bool moved = false;
 static bool on_start = true;
+static bool cam_front = false;
 
 static float posX = 0;
 static float posZ = 0;
@@ -127,6 +128,10 @@ static void on_keyboard(int key, int x, int y) {
                 moved = true;
                 start_time = time(NULL);
             }
+            break;
+        case 'c':
+        case 'C':
+            cam_front = !cam_front;
             break;
         case 27:
             exit(1);
@@ -298,8 +303,15 @@ static void on_update(int val) {
     //rotacija tockova
     rotX += speed * 100;
 
-    //camera prati auto sa malim zakasnjenjem
-    camera_angle = camera_angle + (angle - camera_angle) * 0.02f;
+    /*
+     * Ukoliko je cam_front false, ugao kamere prati skretanje sa malim zakasnjenje
+     * a ukoliko je cam_front true, onda iz nema potrebe za animacijom pracenja automobila
+     * jer se posmatra iz uloge vozaca, tako da je ugao kamere, zapravo samo ugao automobila.
+     */
+    if (cam_front == false)
+        camera_angle = camera_angle + (angle - camera_angle) * 0.02f;
+    else
+        camera_angle = angle;
 
     float startX = (tacke_puta[0].x + tacke_puta[1].x) / 2;
     float startZ = (tacke_puta[0].z + tacke_puta[1].z) / 2;
@@ -470,15 +482,36 @@ static void on_display(void) {
     gluPerspective(
             60,
             window_width / (float) window_height,
-            1, 500);
+            0.3, 500);
 
     /* Podesava se tacka pogleda. */
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+
+    /*
+     * Dodato je gore u kodu (u on_keyboard funkciji) da na 'c' menja bool vrednost promenljive cam_front.
+     * Ukoliko je cam_front false, camera gleda iza automobila, 3rd person, a ukoliko je true, gleda iz lica vozaca.
+     * Zato su prethodni koeficijenti stavljeni u promenljive, koje se menjaju ukoliko je cam_front true ili false.
+     * cam_pos je distanca kamere od centra automobila, pomerenog ka sofersajbni za 0.5
+     * y_view je pozicija kamere po y osi, y_look je pozicija tacke gledanja po y osi.
+     * Napomena: Koeficijenti su dobijeni iskljucivo eksperimentisanjem.
+     */
+
+    float cam_pos = 6;
+    float y_view = 1.5f;
+    float y_look = 0.5f;
+    if (cam_front == true) {
+        cam_pos = 0.8f;
+        y_view = 0.4f;
+        y_look = 0.25f;
+    }
     gluLookAt(
-            posX - sinf(camera_angle * (float) M_PI / 180.0f) * 6, 1.5f,
-            posZ - cosf(camera_angle * (float) M_PI / 180.0f) * 6,
-            posX, 0.5f, posZ,
+            (posX + sinf(angle * (float) M_PI / 180.0f) * 0.5f) - sinf(camera_angle * (float) M_PI / 180.0f) * cam_pos,
+            y_view,
+            (posZ + cosf(angle * (float) M_PI / 180.0f) * 0.5f) - cosf(camera_angle * (float) M_PI / 180.0f) * cam_pos,
+            (posX + sinf(angle * (float) M_PI / 180.0f) * 0.5f),
+            y_look,
+            (posZ + cosf(angle * (float) M_PI / 180.0f) * 0.5f),
             0, 1, 0
     );
 
