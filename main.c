@@ -32,6 +32,10 @@ static float posZ = 0;
 static float angle = 0;
 static float camera_angle = 180;
 
+static float cam_pos = 6;
+static float y_view = 1.5f;
+static float y_look = 0.5f;
+
 static float vX = 0;
 static float vZ = 0;
 
@@ -497,13 +501,22 @@ static void on_display(void) {
      * Napomena: Koeficijenti su dobijeni iskljucivo eksperimentisanjem.
      */
 
-    float cam_pos = 6;
-    float y_view = 1.5f;
-    float y_look = 0.5f;
+
     if (cam_front == true) {
-        cam_pos = 0.8f;
-        y_view = 0.4f;
-        y_look = 0.25f;
+        if (cam_pos > 0.8f)
+            cam_pos -= 0.1;
+        if (y_view > 0.4f)
+            y_view -= 0.03f;
+        if (y_look > 0.25f)
+            y_look -= 0.03f;
+    }else {
+        if (cam_pos < 6)
+            cam_pos += 0.1;
+        if (y_view < 1.5f)
+            y_view += 0.03f;
+        if (y_look < 0.5f)
+            y_look += 0.03f;
+
     }
     gluLookAt(
             (posX + sinf(angle * (float) M_PI / 180.0f) * 0.5f) - sinf(camera_angle * (float) M_PI / 180.0f) * cam_pos,
